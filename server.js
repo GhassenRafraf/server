@@ -1,16 +1,22 @@
 //load env variables
+import * as dotenv from "dotenv";
 if (process.env.NODE_ENV != "production") {
-    require("dotenv").config();
+    dotenv.config();
   }
 
 //import dependencies
-import  express  from "express";
-import cors from "cors";   
+import express, { json } from "express";
+const cors = require("cors");
+const connectToDb = require("./config/connectToDB");
+const employeeController = require('./controllers/employeeController');
 
 const app = express();
-app.use(express.json());
+app.use(json());
 app.use(cors());
 
-app.listen(3030, () => {
-    console.log("Server is running on port 3030");    
-}) 
+connectToDb();
+
+app.post("/employee", employeeController.createEmployee);
+
+
+app.listen(process.env.PORT);

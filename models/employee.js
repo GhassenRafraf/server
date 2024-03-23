@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const employeeSchema = new mongoose.Schema({
+const EmployeeSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
     email: String,
@@ -9,6 +9,6 @@ const employeeSchema = new mongoose.Schema({
     department: String
 });
 
-const employee = mongoose.model('employee', employeeSchema);
+const Employee = model('Employee', EmployeeSchema);
 
-module.exports = employee;
+export default Employee;
