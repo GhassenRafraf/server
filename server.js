@@ -16,6 +16,9 @@ connectToDb();
 
 // Routes
 app.post('/addMember', employeeControllers.addMember);
+app.delete('/removeMember/:id', employeeControllers.removeMember);
+app.get('/fetchMembers', employeeControllers.fetchMembers);
+app.put('/updateMember/:id', employeeControllers.updateMember);
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`);
