@@ -8,6 +8,8 @@ const employeeSchema = new Schema({
     contact: String,
     clearanceLevel: Number,
     department: String,
+    addedAt: Date,
+    deletedAt: Date,
 });
 const Employee = mongoose.model('Employee', employeeSchema);
 module.exports = Employee;

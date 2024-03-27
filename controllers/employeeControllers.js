@@ -10,11 +10,6 @@ const addMember = async (req, res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: "Invalid email format" });
-        }
-
         const existingEmployee = await Employee.findOne({ email });
         if (existingEmployee) {
             return res.status(400).json({ message: "Email already exists" });
@@ -24,9 +19,9 @@ const addMember = async (req, res) => {
         if (!contactRegex.test(contact)) {
             return res.status(400).json({ message: "Invalid contact format. Please provide an 8 digit phone number" });
         }
+        const addedAt = new Date();
 
-        const employeeModel = await Employee.create({ firstName, lastName, email, contact, clearanceLevel, department });
-        
+        const employeeModel = await Employee.create({ firstName, lastName, email, contact, clearanceLevel, department, addedAt });
         return res.status(200).json({ message: "Member added successfully", employeeModel });
     } catch (error) {
         console.error("Error adding member:", error);
@@ -37,15 +32,43 @@ const addMember = async (req, res) => {
 // remove member controller function
 const removeMember = async (req, res) => {
     const employeeId = req.params.id;
-    await Employee.findByIdAndDelete(employeeId);
-    res.status(200).json({ message: "Member deleted successfully" });
-}
+
+    try {
+        // Fetch the employee document by ID
+        const employee = await Employee.findById(employeeId);
+
+        if (!employee) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+
+        // Update the clearance level to -1
+        employee.clearanceLevel = -1;
+
+        // Add timestamp for deletion
+        employee.deletedAt = new Date();
+
+        // Save the updated document
+        await employee.save();
+
+        res.status(200).json({ message: "Member deleted successfully", employee });
+    } catch (error) {
+        console.error("Error removing member:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 
 //fetch all members controller function
 const fetchMembers = async (req, res) => {
-    const employees = await Employee.find({});
-    res.status(200).json({ employees });
-}
+    try {
+        const employees = await Employee.find({ clearanceLevel: { $ne: -1 } }); // Exclude employees with clearance level -1
+        res.status(200).json({ employees });
+    } catch (error) {
+        console.error("Error fetching members:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 //update member controller function
 const updateMember = async (req, res) => {
     const employeeId = req.params.id;
@@ -58,6 +81,7 @@ const updateMember = async (req, res) => {
     await employee.save();
     res.status(200).json({ message: "Employee updated successfully", employee });
 }
+
 
 // Export the controller function
 module.exports = { 
