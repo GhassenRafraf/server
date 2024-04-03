@@ -13,14 +13,12 @@
   "dependencies": {
     "@dlib-js/face-landmarks": "^0.1.5",
     "cors": "^2.8.5",
-    "dlib": "^0.0.99",
     "dotenv": "^16.4.5",
     "express": "^4.19.1",
     "http": "^0.0.1-security",
     "mongoose": "^8.2.3",
     "mqtt": "^5.5.0",
     "multer": "^1.4.5-lts.1",
-    "mysql": "^2.18.1",
     "nodemon": "^3.1.0",
     "socket.io": "^4.7.5"
   }

@@ -3,6 +3,12 @@ const Employee = require("../models/employeeModel");
 const { detectLandmarks } = require("../landmarking/landmarks");
 const multer = require("multer");
 
+let mqttClient;
+function setMQTTClient(client) {
+  mqttClient = client;
+}
+
+
 // Multer configuration
 
 const storage = multer.diskStorage({
@@ -66,6 +72,17 @@ const addMember = async (req, res) => {
             department,
             addedAt,
             landmarks: landmarks 
+          });
+
+          const topic = "employeeData"; 
+          const payload = JSON.stringify({
+            employeeId: employeeModel._id, 
+            landmarks: landmarks 
+          });
+          mqttClient.publish(topic, payload,{ qos : 2}, (err) => {
+            if (error) {
+              return res.status(500).json({ success: false, error: "Failed to publish to MQTT" });
+            }
           });
 
           return res.status(200).json({ success: true, message: "Member added successfully", employeeModel });
@@ -137,4 +154,5 @@ module.exports = {
   removeMember,
   fetchMembers,
   updateMember,
+  setMQTTClient,
 };
