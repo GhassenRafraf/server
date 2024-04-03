@@ -1,57 +1,81 @@
 // Importing required modules
 const Employee = require("../models/employeeModel");
+const { detectLandmarks } = require("../landmarking/landmarks");
+const multer = require("multer");
+
+// Multer configuration
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage }).single('image');
 
 // add member controller function
 const addMember = async (req, res) => {
   try {
-    const { firstName, lastName, email, contact, clearanceLevel, department } =
-      req.body;
+    upload(req, res, async (err) => {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ success: false, error: "File upload error" });
+      } else if (err) {
+        return res.status(500).json({ success: false, error: "Internal server error" });
+      }
 
-    if (
-      !firstName ||
-      !lastName ||
-      !email ||
-      !contact ||
-      !clearanceLevel ||
-      !department
-    ) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "No image uploaded" });
+      }
 
-    const existingEmployee = await Employee.findOne({ email });
-    if (existingEmployee) {
-      return res.status(400).json({ message: "Email already exists" });
-    }
+      const { firstName, lastName, email, contact, clearanceLevel, department } = req.body;
 
-    const contactRegex = /^\d{8}$/;
-    if (!contactRegex.test(contact)) {
-      return res.status(400).json({
-        message:
-          "Invalid contact format. Please provide an 8 digit phone number",
+      if (!firstName || !lastName || !email || !contact || !clearanceLevel || !department) {
+        return res.status(400).json({ success: false, error: "All fields are required" });
+      }
+
+      const existingEmployee = await Employee.findOne({ email });
+      if (existingEmployee) {
+        return res.status(400).json({ success: false, error: "Email already exists" });
+      }
+
+      const contactRegex = /^\d{8}$/;
+      if (!contactRegex.test(contact)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid contact format. Please provide an 8 digit phone number",
+        });
+      }
+
+      const addedAt = new Date();
+
+      detectLandmarks(req.file.path, async (error, landmarks) => {
+        if (error) {
+          return res.status(500).json({ success: false, error: "Failed to detect landmarks" });
+        }
+
+        try {
+          const employeeModel = await Employee.create({
+            firstName,
+            lastName,
+            email,
+            contact,
+            clearanceLevel,
+            department,
+            addedAt,
+            landmarks: landmarks 
+          });
+
+          return res.status(200).json({ success: true, message: "Member added successfully", employeeModel });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: "Internal server error" });
+        }
       });
-    }
-
-    const addedAt = new Date();
-
-    // Create the employee
-    const employeeModel = await Employee.create({
-      firstName,
-      lastName,
-      email,
-      contact,
-      clearanceLevel,
-      department,
-      addedAt,
     });
-
-    // Handle the picture data here
-    console.log("Picture received successfully.");
-
-    return res
-      .status(200)
-      .json({ message: "Member added successfully", employeeModel });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
 
@@ -78,11 +102,11 @@ const removeMember = async (req, res) => {
 
 //fetch all members controller function
 const fetchMembers = async (req, res) => {
-  const department = req.query.department; 
-  let query = { clearanceLevel: { $ne: -1 } }; 
+  const department = req.query.department;
+  let query = { clearanceLevel: { $ne: -1 } };
 
   if (department) {
-    query.department = department; 
+    query.department = department;
   }
 
   try {

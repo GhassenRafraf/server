@@ -10,6 +10,7 @@ const employeeSchema = new Schema({
   department: String,
   addedAt: Date,
   deletedAt: Date,
+  landmarks: Object,
   onSite: { type: Boolean, default: false },
 });
 const Employee = mongoose.model("Employee", employeeSchema);
