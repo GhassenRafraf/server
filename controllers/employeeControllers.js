@@ -79,7 +79,7 @@ const addMember = async (req, res) => {
             employeeId: employeeModel._id, 
             landmarks: landmarks 
           });
-          mqttClient.publish(topic, payload,{ qos : 2}, (err) => {
+          mqttClient.publish(topic, payload,{ qos : 2},  (err) => {
             if (error) {
               return res.status(500).json({ success: false, error: "Failed to publish to MQTT" });
             }
@@ -95,6 +95,7 @@ const addMember = async (req, res) => {
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
+
 
 // remove member controller function
 const removeMember = async (req, res) => {

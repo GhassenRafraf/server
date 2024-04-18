@@ -6,7 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const connectToDb = require("./config/connectToDb");
 const employeeControllers = require("./controllers/employeeControllers");
-const {initializeMQTT} = require("./config/connectToMQTT");
+const { initializeMQTT, setupWebSocket } = require("./config/connectToMQTT");
 const http = require("http");
 const app = express();
 const server = http.createServer(app);
@@ -17,7 +17,6 @@ connectToDb();
 // Initialize MQTT connection
 const mqttClient = initializeMQTT();
 employeeControllers.setMQTTClient(mqttClient);
-
 
 
 // Routes
