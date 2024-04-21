@@ -6,7 +6,8 @@ const express = require("express");
 const cors = require("cors");
 const connectToDb = require("./config/connectToDb");
 const employeeControllers = require("./controllers/employeeControllers");
-const { initializeMQTT, setupWebSocket } = require("./config/connectToMQTT");
+const request = require("./controllers/accessRequest");
+const { initializeMQTT } = require("./config/connectToMQTT");
 const http = require("http");
 const app = express();
 const server = http.createServer(app);
@@ -24,6 +25,7 @@ app.post("/addMember", employeeControllers.addMember);
 app.delete("/removeMember/:id", employeeControllers.removeMember);
 app.get("/fetchMembers", employeeControllers.fetchMembers);
 app.put("/updateMember/:id", employeeControllers.updateMember);
+app.post("/requestAccess", request.checkAccess);
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
