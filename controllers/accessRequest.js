@@ -20,9 +20,13 @@ const checkAccess = async (req, res) => {
       }
 
       if (accessGranted) {
+        await Employee.findByIdAndUpdate(employeeId, { onSite: true });
         await AccessLog.create({
           employeeId: employeeId,
           accessGranted: accessGranted,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            department: employee.department,
         });
       }
 
@@ -37,5 +41,18 @@ const checkAccess = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-module.exports = { checkAccess };
+const fetchLogs = async (req, res) => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); 
+  
+      const logs = await AccessLog.find({ timestamp: { $gte: today } }).sort({ timestamp: -1 });
+      
+      return res.status(200).json(logs);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+  
+module.exports = { checkAccess, fetchLogs };

@@ -14,7 +14,10 @@ const accessLogSchema = new Schema({
   timestamp: {
     type: Date,
     default: Date.now
-  }
+  },
+  firstName: String,
+  lastName: String,
+  department: String,
 });
 
 const AccessLog = mongoose.model("AccessLog", accessLogSchema);
