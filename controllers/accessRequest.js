@@ -11,7 +11,7 @@ const checkAccess = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     } else {
       let accessGranted = false;
-      
+
       if (
         employee.clearanceLevel === parseInt(employeeClearance) &&
         employee.department === employeeLevel
@@ -24,9 +24,9 @@ const checkAccess = async (req, res) => {
         await AccessLog.create({
           employeeId: employeeId,
           accessGranted: accessGranted,
-            firstName: employee.firstName,
-            lastName: employee.lastName,
-            department: employee.department,
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          department: employee.department,
         });
       }
 
@@ -42,17 +42,49 @@ const checkAccess = async (req, res) => {
   }
 };
 const fetchLogs = async (req, res) => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); 
-  
-      const logs = await AccessLog.find({ timestamp: { $gte: today } }).sort({ timestamp: -1 });
-      
-      return res.status(200).json(logs);
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Internal Server Error" });
-    }
-  };
-  
-module.exports = { checkAccess, fetchLogs };
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const logs = await AccessLog.find({ timestamp: { $gte: today } }).sort({
+      timestamp: -1,
+    });
+
+    return res.status(200).json(logs);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const countLogsByDay = async (req, res) => {
+  try {
+    const logs = await AccessLog.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$timestamp" },
+            month: { $month: "$timestamp" },
+            day: { $dayOfMonth: "$timestamp" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": -1,
+          "_id.month": -1,
+          "_id.day": -1,
+        },
+      },
+    ]);
+
+    return res.status(200).json(logs);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+module.exports = { checkAccess, fetchLogs, countLogsByDay };

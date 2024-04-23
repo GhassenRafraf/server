@@ -27,6 +27,7 @@ app.get("/fetchMembers", employeeControllers.fetchMembers);
 app.put("/updateMember/:id", employeeControllers.updateMember);
 app.post("/requestAccess", request.checkAccess);
 app.get("/fetchLogs", request.fetchLogs);
+app.get("/countLogsByDay", request.countLogsByDay);
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
