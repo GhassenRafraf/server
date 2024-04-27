@@ -41,6 +41,7 @@ const checkAccess = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 const fetchLogs = async (req, res) => {
   try {
     const today = new Date();

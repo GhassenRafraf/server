@@ -16,6 +16,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+
 app.use(cors());
 app.use(express.json());
 
@@ -30,7 +31,7 @@ wss.on("connection", (ws) => {
     const decodedMessage = message.toString('utf-8');
     console.log("Received message from client:", decodedMessage);  });
     
-  ws.send("Welcome! You are now connected to the WebSocket server.");
+  ws.send("marhbee.");
 });
 
 // Update latestData and broadcast to WebSocket clients when a new MQTT message is received
