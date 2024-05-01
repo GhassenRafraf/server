@@ -60,7 +60,15 @@ const fetchLogs = async (req, res) => {
 
 const countLogsByDay = async (req, res) => {
   try {
+    const lastSevenDays = new Date();
+    lastSevenDays.setDate(lastSevenDays.getDate() - 7);
+
     const logs = await AccessLog.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: lastSevenDays }, // Filter logs for the last seven days
+        },
+      },
       {
         $group: {
           _id: {
@@ -86,6 +94,7 @@ const countLogsByDay = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 
 module.exports = { checkAccess, fetchLogs, countLogsByDay };

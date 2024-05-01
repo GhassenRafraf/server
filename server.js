@@ -7,51 +7,56 @@ const cors = require("cors");
 const connectToDb = require("./config/connectToDb");
 const employeeControllers = require("./controllers/employeeControllers");
 const request = require("./controllers/accessRequest");
+const diagnostic = require("./controllers/diagnostic");
 const { initializeMQTT } = require("./config/connectToMQTT");
 const http = require("http");
-const MQTT_TOPIC = "test";
+const MQTT_TOPICS = [
+  "$SYS/broker/clients/active",
+  "$SYS/broker/clients/maximum",
+];
 const WebSocket = require("ws");
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-
 app.use(cors());
 app.use(express.json());
 
 connectToDb();
 
-// Initialize MQTT connection
 const mqttClient = initializeMQTT();
+let latestMessageObject = {};
+
 employeeControllers.setMQTTClient(mqttClient);
-
-wss.on("connection", (ws) => {
-  ws.on("message", (message) => {
-    const decodedMessage = message.toString('utf-8');
-    console.log("Received message from client:", decodedMessage);  });
-    
-  ws.send("marhbee.");
-});
-
-// Update latestData and broadcast to WebSocket clients when a new MQTT message is received
-mqttClient.on("message", function (topic, message) {
-  console.log("Received message from MQTT:", message.toString());
-  const newMessage = message.toString();
-
-  if (latestData !== newMessage) {
-    latestData = newMessage;
-    
-    // Send message to all WebSocket clients
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ data: latestData }));
+diagnostic.MQTTClient(mqttClient);
+diagnostic.getIpAddress();
+mqttClient.subscribe(MQTT_TOPICS, (error) => {
+  if (error) {
+    console.error("Error subscribing to topic:", error);
+  } else {
+    mqttClient.on("message", (topic, message) => {
+      if (
+        topic === "$SYS/broker/clients/active" ||
+        topic === "$SYS/broker/clients/maximum"
+      ) {
+        const value = parseInt(message.toString());
+        latestMessageObject[topic] = value;
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ topic: topic, message: value }));
+          }
+        });
       }
     });
   }
 });
+wss.on("connection", (ws) => {
+  Object.entries(latestMessageObject).forEach(([topic, value]) => {
+    ws.send(JSON.stringify({ topic: topic, message: value }));
+  });
+});
 
-// Handle WebSocket connection errors
 wss.on("error", (error) => {
   console.error("WebSocket server error:", error);
 });
@@ -64,6 +69,7 @@ app.put("/updateMember/:id", employeeControllers.updateMember);
 app.post("/requestAccess", request.checkAccess);
 app.get("/fetchLogs", request.fetchLogs);
 app.get("/countLogsByDay", request.countLogsByDay);
+app.post("/pingIPs", diagnostic.pingIPs);
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
