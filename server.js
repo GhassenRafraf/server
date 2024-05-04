@@ -8,6 +8,7 @@ const connectToDb = require("./config/connectToDb");
 const employeeControllers = require("./controllers/employeeControllers");
 const request = require("./controllers/accessRequest");
 const diagnostic = require("./controllers/diagnostic");
+const upload = require ("./checkAccess/checkAccesss");
 const { initializeMQTT } = require("./config/connectToMQTT");
 const http = require("http");
 const MQTT_TOPICS = [
@@ -15,7 +16,6 @@ const MQTT_TOPICS = [
   "$SYS/broker/clients/maximum",
 ];
 const WebSocket = require("ws");
-
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -24,11 +24,12 @@ app.use(cors());
 app.use(express.json());
 
 connectToDb();
-
 const mqttClient = initializeMQTT();
+
+//const mqttClient = initializeMQTT();
 let latestMessageObject = {};
 
-employeeControllers.setMQTTClient(mqttClient);
+//employeeControllers.setMQTTClient(mqttClient);
 diagnostic.MQTTClient(mqttClient);
 diagnostic.getIpAddress();
 mqttClient.subscribe(MQTT_TOPICS, (error) => {
@@ -70,7 +71,7 @@ app.post("/requestAccess", request.checkAccess);
 app.get("/fetchLogs", request.fetchLogs);
 app.get("/countLogsByDay", request.countLogsByDay);
 app.post("/pingIPs", diagnostic.pingIPs);
-
+app.post("/upload", upload.handleUpload)
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 });

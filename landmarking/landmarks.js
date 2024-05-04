@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 
 function detectLandmarks(imagePath, callback) {
-    const pythonProcess = spawn('python', ['./landmarking/faceLandmarks.py', imagePath]);
+    const pythonProcess = spawn('python', ['./landmarking/faceFeatures.py', imagePath]);
     let landmarksData = '';
     let errorData = '';
     pythonProcess.stdout.on('data', (data) => {
